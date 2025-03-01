@@ -230,6 +230,11 @@
                 width: 100%;
             }
         }
+    .contact-card h3 {
+      margin: 10px 0 5px 0;
+      font-size: 18px;
+      color: #333;
+    }
     </style>
 </head>
 <body>
@@ -358,6 +363,7 @@
                         ${departments[dept].map(contact => `
                             <div class="contact-card" data-name="${contact.name}">
                                 <img src="${contact.imageUrl}" alt="${contact.name}" onerror="this.src='${getDefaultImageForDept(dept)}'">
+                                <h3>${contact.name}</h3> <!-- เพิ่มชื่อที่นี่ -->
                                 <p>${contact.position}</p>
                                 <a href="tel:${contact.phone}" class="phone-link">📞<span class="tooltip">${contact.phone}</span></a>
                             </div>
@@ -422,6 +428,7 @@
                     card.className = 'contact-card highlight';
                     card.innerHTML = `
                         <img src="${contact.imageUrl}" alt="${contact.name}" onerror="this.src='${getDefaultImageForDept(contact.dept)}'">
+                        <h3>${contact.name}</h3> <!-- เพิ่มชื่อที่นี่ -->
                         <p>${contact.position}</p>
                         <a href="tel:${contact.phone}" class="phone-link">📞<span class="tooltip">${contact.phone}</span></a>
                     `;
