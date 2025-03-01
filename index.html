@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <!-- คงส่วน head เดิม (รวม CSS) -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ติดต่อใครเอ่ย</title>
+    <style>
+        /* CSS เดิมทั้งหมด + เพิ่มสำหรับ loading */
+      body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-image: url('https://png.pngtree.com/background/20230519/original/pngtree-the-old-court-school-is-an-old-building-with-a-clock-picture-image_2653697.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #0066cc;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .contact-card {
+            background-color: rgba(249, 249, 249, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .contact-card.highlight {
+            background-color: rgba(255, 243, 205, 0.9);
+            border-color: #ffca2c;
+        }
+        .contact-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        .phone-link {
+            position: relative;
+            text-decoration: none;
+            color: #008000;
+            font-size: 20px;
+        }
+        .phone-link:hover {
+            color: #006600;
+        }
+        .phone-link .tooltip {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 5px 10px;
+            border-radius: 4px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .phone-link:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        #search-results {
+            margin-bottom: 40px;
+        }
+        #result-count {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        .control-bar {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #department-menu {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.9);
+            width: 200px;
+        }
+        #full-display {
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+            box-sizing: border-box;
+        }
+        #close-btn {
+            float: right;
+            background-color: #cc0000;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #close-btn:hover {
+            background-color: #990000;
+        }
+        #search-btn {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #search-btn:hover {
+            background-color: #004d99;
+        }
+        #search-input {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid #ddd;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #555;
+        }
+        footer a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        /* Media Query สำหรับมือถือ */
+        @media (max-width: 768px) {
+            #full-display {
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .card-container {
+                grid-template-columns: 1fr; /* เปลี่ยนเป็น 1 คอลัมน์บนมือถือ */
+            }
+            .control-bar {
+                flex-direction: column; /* จัดเรียงเป็นแนวตั้ง */
+                align-items: stretch;
+            }
+            #search-input {
+                width: 100%; /* ขยายเต็มความกว้าง */
+            }
+            #department-menu {
+                width: 100%; /* ขยายเต็มความกว้าง */
+            }
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            visibility: hidden;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #0066cc;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* CSS เดิมต่อ ... */
+    </style>
+</head>
+<body>
+    <h1>ติดต่อใครเอ่ย</h1>
+    
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <div class="control-bar">
+        <button id="search-btn">ค้นหา</button>
+        <input type="text" id="search-input" placeholder="ค้นหาชื่อ...">
+        <select id="department-menu">
+            <option value="">เลือกฝ่าย</option>
+            <option value="admin">ฝ่ายบริหาร</option>
+            <option value="support">ฝ่ายสนับสนุน</option>
+            <option value="kinder">ครูประจำชั้น - อนุบาล</option>
+            <option value="primary">ครูประจำชั้น - ประถม</option>
+            <option value="secondary">ครูประจำชั้น - มัธยม</option>
+            <option value="others">ครูและบุคลากรอื่นๆ</option>
+        </select>
+    </div>
+    
+    <div id="search-results" class="hidden">
+        <div id="result-count"></div>
+        <div class="card-container" id="results-container"></div>
+    </div>
+
+    <div id="contacts"></div>
+    <div id="full-display" class="hidden">
+        <button id="close-btn">ปิด</button>
+        <div id="full-content"></div>
+    </div>
+
+    <footer>
+        <!-- คง footer เดิม -->
+      <p>พัฒนาโดย <a href="https://example.com" target="_blank">ทีมงาน xAI</a> | พัฒนาจาก <a href="https://grok.com/" target="_blank">https://grok.com/</a> | ลิขสิทธิ์ © 2025 สงวนลิขสิทธิ์ทั้งหมด</p>
+    </footer>
+
+    <script>
+
+ กำหนดตัวแปรสำหรับเก็บข้อมูล
+
+        let allContacts = [];
+
+        function showLoading(show) {
+            document.getElementById('loading').style.visibility = show ? 'visible' : 'hidden';
+        }
+
+        function start() {
+            showLoading(true);
+            gapi.client.init({
+                apiKey: 'AIzaSyABr1TRse6QNjo1NHdGLnpNew6N1E6s6DI',
+                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+            }).then(function() {
+                return gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: '1MBdqAWFPEV1uQVGosHvRNuQpOjeju--gXgdB9B9k2a4',
+                    range: 'Sheet1!A:E', // เพิ่มคอลัมน์ E สำหรับ URL รูปภาพ
+                });
+            }).then(function(response) {
+                const data = response.result.values;
+                processSheetData(data);
+                showLoading(false);
+            }, function(error) {
+                console.error('Error: ' + error.result.error.message);
+                showLoading(false);
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.result.error.message);
+            });
+        }
+
+        function processSheetData(data) {
+            const contactsDiv = document.getElementById('contacts');
+            let departments = {};
+
+            // ข้าม header row
+            for (let i = 1; i < data.length; i++) {
+                const [name, position, phone, dept, imageUrl] = data[i];
+                const contact = { 
+                    name, 
+                    position, 
+                    phone, 
+                    dept, 
+                    imageUrl: imageUrl || getDefaultImageForDept(dept) 
+                };
+                
+                allContacts.push(contact);
+
+                if (!departments[dept]) {
+                    departments[dept] = [];
+                }
+                departments[dept].push(contact);
+            }
+
+            // Section โรงเรียน (default)
+            contactsDiv.innerHTML = `
+                <div class="section">
+                    <h2>โรงเรียน</h2>
+                    <div class="card-container">
+                        <div class="contact-card" data-name="สำนักงานโรงเรียน">
+                            <img src="https://png.pngtree.com/png-vector/20230831/ourlarge/pngtree-3d-school-building-and-office-illustration-png-image_9192554.png" alt="สำนักงานโรงเรียน">
+                            <p>สำนักงานโรงเรียน</p>
+                            <a href="tel:021234567" class="phone-link">📞<span class="tooltip">02-123-4567</span></a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // สร้าง HTML สำหรับแต่ละฝ่าย
+            Object.keys(departments).forEach(dept => {
+                const section = document.createElement('div');
+                section.className = 'section';
+                section.dataset.dept = dept;
+                
+                section.innerHTML = `
+                    <h2>${getDepartmentName(dept)}</h2>
+                    <div class="card-container">
+                        ${departments[dept].map(contact => `
+                            <div class="contact-card" data-name="${contact.name}">
+                                <img src="${contact.imageUrl}" alt="${contact.name}" onerror="this.src='${getDefaultImageForDept(dept)}'">
+                                <p>${contact.position}</p>
+                                <a href="tel:${contact.phone}" class="phone-link">📞<span class="tooltip">${contact.phone}</span></a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                contactsDiv.appendChild(section);
+            });
+        }
+
+        function getDepartmentName(deptCode) {
+            const deptNames = {
+                'admin': 'ฝ่ายบริหาร',
+                'support': 'ฝ่ายสนับสนุน',
+                'kinder': 'ครูประจำชั้น - อนุบาล',
+                'primary': 'ครูประจำชั้น - ประถม',
+                'secondary': 'ครูประจำชั้น - มัธยม',
+                'others': 'ครูและบุคลากรอื่นๆ'
+            };
+            return deptNames[deptCode] || deptCode;
+        }
+
+        function getDefaultImageForDept(dept) {
+            const images = {
+                'admin': 'https://thumb.photo-ac.com/be/bea0dc19eb372a43a3e49e19d1a4f548_t.jpeg',
+                'support': 'https://e7.pngegg.com/pngimages/659/642/png-clipart-user-profile-computer-software-computer-icons-business-woman-miscellaneous-face.png',
+                'kinder': 'https://cdn.pixabay.com/photo/2022/05/22/16/50/outdoors-7213961_1280.jpg',
+                'primary': 'https://cdn.pixabay.com/photo/2022/05/22/16/50/outdoors-7213961_1280.jpg',
+                'secondary': 'https://thumb.photo-ac.com/aa/aa83774360836ce0394fdb6b3ce5876c_t.jpeg',
+                'others': 'https://thumb.photo-ac.com/aa/aa83774360836ce0394fdb6b3ce5876c_t.jpeg'
+            };
+            return images[dept] || 'https://via.placeholder.com/100';
+        }
+
+        // ปรับฟังก์ชันค้นหา
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', function() {
+            let searchTerm = this.value.toLowerCase().trim();
+            let searchResults = document.getElementById('search-results');
+            let resultsContainer = document.getElementById('results-container');
+            let resultCount = document.getElementById('result-count');
+            let contactsDiv = document.getElementById('contacts');
+
+            resultsContainer.innerHTML = '';
+            searchResults.classList.add('hidden');
+            contactsDiv.classList.remove('hidden');
+            resultCount.textContent = '';
+
+            if (searchTerm === '') return;
+
+            let matches = allContacts.filter(contact => 
+                contact.name.toLowerCase().includes(searchTerm) ||
+                contact.position.toLowerCase().includes(searchTerm)
+            );
+
+            if (matches.length > 0) {
+                searchResults.classList.remove('hidden');
+                contactsDiv.classList.add('hidden');
+                resultCount.textContent = `พบ ${matches.length} รายการ`;
+                matches.forEach(contact => {
+                    const card = document.createElement('div');
+                    card.className = 'contact-card highlight';
+                    card.innerHTML = `
+                        <img src="${contact.imageUrl}" alt="${contact.name}" onerror="this.src='${getDefaultImageForDept(contact.dept)}'">
+                        <p>${contact.position}</p>
+                        <a href="tel:${contact.phone}" class="phone-link">📞<span class="tooltip">${contact.phone}</span></a>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+            } else {
+                resultCount.textContent = 'ไม่พบรายการที่ตรงกัน';
+                searchResults.classList.remove('hidden');
+                contactsDiv.classList.add('hidden');
+            }
+        });
+
+        // การจัดการปุ่มค้นหาและช่องค้นหา
+        const searchBtn = document.getElementById('search-btn');
+        let isSearchVisible = false;
+
+        searchBtn.addEventListener('click', function() {
+            if (!isSearchVisible) {
+                searchInput.style.display = 'inline-block';
+                searchInput.focus();
+                isSearchVisible = true;
+            } else {
+                searchInput.style.display = 'none';
+                searchInput.value = '';
+                resetSearch();
+                isSearchVisible = false;
+            }
+        });
+
+        function resetSearch() {
+            let searchResults = document.getElementById('search-results');
+            let resultsContainer = document.getElementById('results-container');
+            let resultCount = document.getElementById('result-count');
+            let contactsDiv = document.getElementById('contacts');
+            resultsContainer.innerHTML = '';
+            searchResults.classList.add('hidden');
+            contactsDiv.classList.remove('hidden');
+            resultCount.textContent = '';
+        }
+
+        // การจัดการ full display
+        const departmentMenu = document.getElementById('department-menu');
+        const fullDisplay = document.getElementById('full-display');
+        const fullContent = document.getElementById('full-content');
+        const closeBtn = document.getElementById('close-btn');
+
+        departmentMenu.addEventListener('change', function() {
+            const selectedDept = this.value;
+            fullContent.innerHTML = '';
+
+            if (selectedDept) {
+                const deptSection = document.querySelector(`[data-dept="${selectedDept}"]`);
+                if (deptSection) {
+                    fullContent.appendChild(deptSection.cloneNode(true));
+                    fullDisplay.style.display = 'block';
+                }
+            }
+            this.value = '';
+        });
+
+        closeBtn.addEventListener('click', function() {
+            fullDisplay.style.display = 'none';
+        });
+
+    </script>
+    <script src="https://apis.google.com/js/api.js" onload="initClient()"></script>
+</body>
+</html>
