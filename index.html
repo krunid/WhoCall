@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">ติดต่อใครเอ่ย</title> <!-- จะถูกแทนที่ด้วยค่าจาก Settings -->
+    <title id="page-title">ติดต่อใครเอ่ย</title>
     <style>
+        /* CSS เดิมทั้งหมด */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -232,7 +233,7 @@
     </style>
 </head>
 <body>
-    <h1 id="main-title">ติดต่อใครเอ่ย</h1> <!-- จะถูกแทนที่ด้วยค่าจาก Settings -->
+    <h1 id="main-title">ติดต่อใครเอ่ย</h1>
 
     <div id="loading" class="loading-overlay">
         <div class="loader"></div>
@@ -269,56 +270,41 @@
     </footer>
 
     <script>
-        // ตัวแปรเก็บข้อมูลทั้งหมด
+        // ตัวแปรเก็บข้อมูล
         let allContacts = [];
         let settings = {};
-
-        // เริ่มต้น Google API
-        function initClient() {
-            gapi.load('client', start);
-        }
 
         // แสดง/ซ่อน Loading
         function showLoading(show) {
             document.getElementById('loading').style.visibility = show ? 'visible' : 'hidden';
         }
 
-        // เริ่มดึงข้อมูล
-        function start() {
+        // ดึงข้อมูล JSON จาก Google Apps Script
+        function fetchData() {
             showLoading(true);
-            gapi.client.init({
-                apiKey: 'AIzaSyD73iZz3rubdNeSxGk35TRRnD34YcTYYT4', // แทนที่ด้วย API Key
-                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-            }).then(function() {
-                // ดึง Settings ก่อน
-                return gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: '1MBdqAWFPEV1uQVGosHvRNuQpOjeju--gXgdB9B9k2a4', // แทนที่ด้วย Spreadsheet ID
-                    range: 'Settings!A:B', // Sheet ชื่อ Settings
+            fetch('https://script.google.com/macros/s/AKfycbzcZrNzfYWwV03RlFDzSpElOoohSuFVGKRm0esCKmr6fjNhUlfF3gNJoo0FwhoKuFSoHQ/exec') // แทนที่ YOUR_SCRIPT_ID ด้วย ID จาก URL Web App
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    settings = data.settings || {};
+                    allContacts = data.contacts || [];
+                    processSettings();
+                    processSheetData();
+                    showLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    showLoading(false);
+                    alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error.message);
                 });
-            }).then(function(response) {
-                processSettings(response.result.values);
-                // ดึงข้อมูล Contacts หลังจากตั้งค่าเสร็จ
-                return gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: '1MBdqAWFPEV1uQVGosHvRNuQpOjeju--gXgdB9B9k2a4',
-                    range: 'Sheet1!A:E', // ข้อมูล Contacts
-                });
-            }).then(function(response) {
-                processSheetData(response.result.values);
-                showLoading(false);
-            }, function(error) {
-                console.error('Error: ' + error.result.error.message);
-                showLoading(false);
-                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.result.error.message);
-            });
         }
 
         // ประมวลผล Settings
-        function processSettings(data) {
-            data.forEach(([key, value]) => {
-                settings[key] = value;
-            });
-
-            // นำการตั้งค่าไปใช้
+        function processSettings() {
             if (settings['PageTitle']) {
                 document.getElementById('page-title').textContent = settings['PageTitle'];
                 document.getElementById('main-title').textContent = settings['PageTitle'];
@@ -336,27 +322,17 @@
         }
 
         // ประมวลผลข้อมูล Contacts
-        function processSheetData(data) {
+        function processSheetData() {
             const contactsDiv = document.getElementById('contacts');
             let departments = {};
 
-            for (let i = 1; i < data.length; i++) {
-                const [name, position, phone, dept, imageUrl] = data[i];
-                const contact = { 
-                    name, 
-                    position, 
-                    phone, 
-                    dept, 
-                    imageUrl: imageUrl || getDefaultImageForDept(dept) 
-                };
-                
-                allContacts.push(contact);
-
+            allContacts.forEach(contact => {
+                const { name, position, phone, dept, imageUrl } = contact;
                 if (!departments[dept]) {
                     departments[dept] = [];
                 }
-                departments[dept].push(contact);
-            }
+                departments[dept].push({ name, position, phone, imageUrl: imageUrl || getDefaultImageForDept(dept) });
+            });
 
             contactsDiv.innerHTML = `
                 <div class="section">
@@ -508,7 +484,9 @@
         closeBtn.addEventListener('click', function() {
             fullDisplay.style.display = 'none';
         });
+
+        // เริ่มดึงข้อมูลเมื่อโหลดหน้า
+        window.onload = fetchData;
     </script>
-    <script src="https://apis.google.com/js/api.js" onload="initClient()"></script>
 </body>
 </html>
