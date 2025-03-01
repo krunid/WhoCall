@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <!-- คงส่วน head เดิม (รวม CSS) -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ติดต่อใครเอ่ย</title>
+    <title id="page-title">ติดต่อใครเอ่ย</title> <!-- จะถูกแทนที่ด้วยค่าจาก Settings -->
     <style>
-        /* CSS เดิมทั้งหมด + เพิ่มสำหรับ loading */
-      body {
+        body {
             font-family: Arial, sans-serif;
             margin: 20px;
             line-height: 1.6;
@@ -188,28 +186,6 @@
         footer a:hover {
             text-decoration: underline;
         }
-        /* Media Query สำหรับมือถือ */
-        @media (max-width: 768px) {
-            #full-display {
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-            .card-container {
-                grid-template-columns: 1fr; /* เปลี่ยนเป็น 1 คอลัมน์บนมือถือ */
-            }
-            .control-bar {
-                flex-direction: column; /* จัดเรียงเป็นแนวตั้ง */
-                align-items: stretch;
-            }
-            #search-input {
-                width: 100%; /* ขยายเต็มความกว้าง */
-            }
-            #department-menu {
-                width: 100%; /* ขยายเต็มความกว้าง */
-            }
-        }
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -235,13 +211,29 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* CSS เดิมต่อ ... */
+        @media (max-width: 768px) {
+            #full-display {
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .card-container {
+                grid-template-columns: 1fr;
+            }
+            .control-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #search-input, #department-menu {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>ติดต่อใครเอ่ย</h1>
-    
-    <!-- Loading Indicator -->
+    <h1 id="main-title">ติดต่อใครเอ่ย</h1> <!-- จะถูกแทนที่ด้วยค่าจาก Settings -->
+
     <div id="loading" class="loading-overlay">
         <div class="loader"></div>
     </div>
@@ -259,46 +251,59 @@
             <option value="others">ครูและบุคลากรอื่นๆ</option>
         </select>
     </div>
-    
+
     <div id="search-results" class="hidden">
         <div id="result-count"></div>
         <div class="card-container" id="results-container"></div>
     </div>
 
     <div id="contacts"></div>
+
     <div id="full-display" class="hidden">
         <button id="close-btn">ปิด</button>
         <div id="full-content"></div>
     </div>
 
     <footer>
-        <!-- คง footer เดิม -->
-      <p>พัฒนาโดย <a href="https://example.com" target="_blank">ทีมงาน xAI</a> | พัฒนาจาก <a href="https://grok.com/" target="_blank">https://grok.com/</a> | ลิขสิทธิ์ © 2025 สงวนลิขสิทธิ์ทั้งหมด</p>
+        <p>พัฒนาโดย <a href="https://example.com" target="_blank">ทีมงาน xAI</a> | พัฒนาจาก <a href="https://grok.com/" target="_blank">https://grok.com/</a> | ลิขสิทธิ์ © 2025 สงวนลิขสิทธิ์ทั้งหมด</p>
     </footer>
 
     <script>
-
- กำหนดตัวแปรสำหรับเก็บข้อมูล
-
+        // ตัวแปรเก็บข้อมูลทั้งหมด
         let allContacts = [];
+        let settings = {};
 
+        // เริ่มต้น Google API
+        function initClient() {
+            gapi.load('client', start);
+        }
+
+        // แสดง/ซ่อน Loading
         function showLoading(show) {
             document.getElementById('loading').style.visibility = show ? 'visible' : 'hidden';
         }
 
+        // เริ่มดึงข้อมูล
         function start() {
             showLoading(true);
             gapi.client.init({
-                apiKey: 'AIzaSyABr1TRse6QNjo1NHdGLnpNew6N1E6s6DI',
+                apiKey: 'AIzaSyD73iZz3rubdNeSxGk35TRRnD34YcTYYT4', // แทนที่ด้วย API Key
                 discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
             }).then(function() {
+                // ดึง Settings ก่อน
                 return gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: '1MBdqAWFPEV1uQVGosHvRNuQpOjeju--gXgdB9B9k2a4',
-                    range: 'Sheet1!A:E', // เพิ่มคอลัมน์ E สำหรับ URL รูปภาพ
+                    spreadsheetId: '1MBdqAWFPEV1uQVGosHvRNuQpOjeju--gXgdB9B9k2a4', // แทนที่ด้วย Spreadsheet ID
+                    range: 'Settings!A:B', // Sheet ชื่อ Settings
                 });
             }).then(function(response) {
-                const data = response.result.values;
-                processSheetData(data);
+                processSettings(response.result.values);
+                // ดึงข้อมูล Contacts หลังจากตั้งค่าเสร็จ
+                return gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: '1MBdqAWFPEV1uQVGosHvRNuQpOjeju--gXgdB9B9k2a4',
+                    range: 'Sheet1!A:E', // ข้อมูล Contacts
+                });
+            }).then(function(response) {
+                processSheetData(response.result.values);
                 showLoading(false);
             }, function(error) {
                 console.error('Error: ' + error.result.error.message);
@@ -307,11 +312,34 @@
             });
         }
 
+        // ประมวลผล Settings
+        function processSettings(data) {
+            data.forEach(([key, value]) => {
+                settings[key] = value;
+            });
+
+            // นำการตั้งค่าไปใช้
+            if (settings['PageTitle']) {
+                document.getElementById('page-title').textContent = settings['PageTitle'];
+                document.getElementById('main-title').textContent = settings['PageTitle'];
+            }
+            if (settings['BackgroundImage']) {
+                document.body.style.backgroundImage = `url('${settings['BackgroundImage']}')`;
+            }
+            if (settings['PrimaryColor']) {
+                document.querySelectorAll('h2, #search-btn').forEach(el => {
+                    el.style.color = settings['PrimaryColor'];
+                    if (el.tagName === 'H2') el.style.borderBottomColor = settings['PrimaryColor'];
+                    if (el.id === 'search-btn') el.style.backgroundColor = settings['PrimaryColor'];
+                });
+            }
+        }
+
+        // ประมวลผลข้อมูล Contacts
         function processSheetData(data) {
             const contactsDiv = document.getElementById('contacts');
             let departments = {};
 
-            // ข้าม header row
             for (let i = 1; i < data.length; i++) {
                 const [name, position, phone, dept, imageUrl] = data[i];
                 const contact = { 
@@ -330,7 +358,6 @@
                 departments[dept].push(contact);
             }
 
-            // Section โรงเรียน (default)
             contactsDiv.innerHTML = `
                 <div class="section">
                     <h2>โรงเรียน</h2>
@@ -344,7 +371,6 @@
                 </div>
             `;
 
-            // สร้าง HTML สำหรับแต่ละฝ่าย
             Object.keys(departments).forEach(dept => {
                 const section = document.createElement('div');
                 section.className = 'section';
@@ -390,7 +416,7 @@
             return images[dept] || 'https://via.placeholder.com/100';
         }
 
-        // ปรับฟังก์ชันค้นหา
+        // การค้นหา
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', function() {
             let searchTerm = this.value.toLowerCase().trim();
@@ -432,7 +458,6 @@
             }
         });
 
-        // การจัดการปุ่มค้นหาและช่องค้นหา
         const searchBtn = document.getElementById('search-btn');
         let isSearchVisible = false;
 
@@ -460,7 +485,7 @@
             resultCount.textContent = '';
         }
 
-        // การจัดการ full display
+        // Full Display
         const departmentMenu = document.getElementById('department-menu');
         const fullDisplay = document.getElementById('full-display');
         const fullContent = document.getElementById('full-content');
@@ -483,7 +508,6 @@
         closeBtn.addEventListener('click', function() {
             fullDisplay.style.display = 'none';
         });
-
     </script>
     <script src="https://apis.google.com/js/api.js" onload="initClient()"></script>
 </body>
